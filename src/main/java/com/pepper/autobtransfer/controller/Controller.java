@@ -37,7 +37,7 @@ public class Controller implements Initializable
         if(!"".equals(deviceNameTxtF.getText()) || deviceNameTxtF.getText() != null)
         {
             double spinValue = (double) spinner.getValue();
-            int period = (int) (spinValue * 60)*60;
+            int period = (int) (spinValue * 60*60);
             System.out.println("perdiod " + period);
             folderPath = FileManager.selectDirectory();
             
@@ -48,12 +48,12 @@ public class Controller implements Initializable
     @FXML
     public void sendNow()
     {
-        if(!"".equals(deviceNameTxtF.getText()) || deviceNameTxtF.getText() != null)
+        /*if(!"".equals(deviceNameTxtF.getText()) || deviceNameTxtF.getText() != null)
         {
             connect.watchFolder(folderPath, deviceNameTxtF.getText(), 0);
         } else {
             System.out.println("something wrong");
-        }
+        }*/
     }
     
 }

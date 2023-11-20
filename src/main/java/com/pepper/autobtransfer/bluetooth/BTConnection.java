@@ -43,11 +43,7 @@ public class BTConnection
                 ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
                 executorService.scheduleAtFixedRate(() -> checkForNewFiles(watchService), 0, period, TimeUnit.SECONDS);
               
-            } else if (path != null && period == 0) {
-                WatchService watchService = FileSystems.getDefault().newWatchService();
-                path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
-                checkForNewFilesAndSendNow(watchService);
-            }
+            } 
                
         } catch (IOException   e) {
             e.printStackTrace();
@@ -69,7 +65,7 @@ public class BTConnection
                         newFilePath = Paths.get(path+"\\"+newFilePath.getFileName());
                         
                         //Thread.sleep(5000);
-                        RemoteDevice remoteDevice = discoverDevice("HUMOR 20 Lite");
+                        RemoteDevice remoteDevice = discoverDevice(deviceName);
                         
                         if (remoteDevice != null) 
                         {
