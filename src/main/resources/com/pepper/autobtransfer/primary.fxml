@@ -23,7 +23,7 @@
       </HBox>
       <HBox prefWidth="200.0" spacing="5.0">
          <children>
-            <TextField fx:id="deviceNameTxtF" promptText="Device name" text="Daniel A72 eszköze" />
+            <TextField fx:id="deviceNameTxtF" promptText="Device name" />
          </children>
       </HBox>
       <HBox prefWidth="200.0" spacing="5.0">
