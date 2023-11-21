@@ -22,7 +22,7 @@ public class Controller implements Initializable
     private Spinner spinner;
     
 
-    @Override
+    @Override  
     public void initialize(URL location, ResourceBundle resources) 
     {
         connect = new BTConnection();
@@ -48,12 +48,13 @@ public class Controller implements Initializable
     @FXML
     public void sendNow()
     {
-        /*if(!"".equals(deviceNameTxtF.getText()) || deviceNameTxtF.getText() != null)
+        if(!"".equals(deviceNameTxtF.getText()) || deviceNameTxtF.getText() != null)
         {
-            connect.watchFolder(folderPath, deviceNameTxtF.getText(), 0);
+            System.out.println("SendNow");
+            connect.watchFolder(folderPath, deviceNameTxtF.getText());
         } else {
             System.out.println("something wrong");
-        }*/
+        }
     }
     
 }

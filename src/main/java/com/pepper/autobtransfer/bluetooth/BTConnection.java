@@ -25,7 +25,9 @@ public class BTConnection
 {
     static final UUID OBEX_PUSH_PROFILE = new UUID(0x1105);
     static String obexURL = null;
-    private static Operation putOperation = null;
+    public static WatchService watchService;
+    public static ScheduledExecutorService executorService;
+    public static Operation putOperation = null;
     private static final int BUFFER_SIZE = 1024;
     private static Path path;
     private static String deviceName;
@@ -36,12 +38,12 @@ public class BTConnection
         try {
             if(path != null && period != 0)
             {
-                WatchService watchService = FileSystems.getDefault().newWatchService();
+                watchService = FileSystems.getDefault().newWatchService();
                 path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
                 System.out.println("path registered");
                 // Create a scheduled executor that will run a task every 5 seconds
-                ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-                executorService.scheduleAtFixedRate(() -> checkForNewFiles(watchService), 0, period, TimeUnit.SECONDS);
+                executorService = Executors.newScheduledThreadPool(1);
+                executorService.scheduleAtFixedRate(() -> checkForNewFiles(watchService), 5, period, TimeUnit.SECONDS);
               
             } 
                
@@ -49,6 +51,26 @@ public class BTConnection
             e.printStackTrace();
         }
     }
+    public void watchFolder(Path path, String deviceName) {
+        BTConnection.path = path;
+        BTConnection.deviceName = deviceName;
+        try {
+            if (path != null) {
+                if(watchService == null){
+                    watchService = FileSystems.getDefault().newWatchService();
+                    path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+                    System.out.println("Path registered");
+                    checkForNewFiles(watchService);
+                } else {
+                    checkForNewFiles(watchService);
+                }
+                
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void checkForNewFiles(WatchService watchService) {
         try {
             System.out.println("checkForNewFiles");
@@ -82,54 +104,13 @@ public class BTConnection
                     }
                 }
                 key.reset();
+            } else {
+                System.out.println("key == null OR path == null" + key + path);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-    private static void checkForNewFilesAndSendNow(WatchService watchService) {
-        try {
-            System.out.println("checkForNewFilesAndSendNow");
-            while(true)
-            {
-                WatchKey key = watchService.poll();
-                if (key != null) {
-                    for (WatchEvent<?> event : key.pollEvents()) {
-                        if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-                            Path newFile = (Path) event.context();
-                            // Process the new file as needed
-                            System.out.println("New file created: " + newFile);
-
-                            Path newFilePath = (Path) event.context();
-
-                            newFilePath = Paths.get(path+"\\"+newFilePath.getFileName());
-
-                            RemoteDevice remoteDevice = discoverDevice(deviceName);
-
-                            if (remoteDevice != null) 
-                            {
-                                searchObexPushProfile(remoteDevice);
-
-                                if(obexURL != null){
-                                    connectAndSendFile( newFilePath.toFile(), obexURL);
-                                } else {
-                                    System.out.println("obexURL is null ");
-                                }
-                            } else {
-                                System.out.println("remoteDevice is null");
-                            }
-                        } else {
-                            System.out.println(" 0 new file found");
-                        }
-                    }
-                    key.reset();
-                }
-            
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    }    
     
     private static RemoteDevice discoverDevice(String deviceName) throws BluetoothStateException {
         
@@ -260,7 +241,7 @@ public class BTConnection
         } else {
             System.out.println("Wrong responseCode " + headerSet.getResponseCode());
         }
-        
+        putOperation.close();
         connection.close();
 
         System.out.println("Streams and connection closed.");

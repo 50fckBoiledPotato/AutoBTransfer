@@ -1,5 +1,6 @@
 package com.pepper.autobtransfer;
 
+import com.pepper.autobtransfer.bluetooth.BTConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -37,4 +38,23 @@ public class App extends Application {
         launch();
     }
 
+    @Override
+    public void stop() throws Exception 
+    {
+        super.stop();
+        if(BTConnection.watchService != null){
+            BTConnection.watchService.close();
+            System.out.println("watchService.close()");
+        }
+        if (BTConnection.putOperation != null) {
+            BTConnection.putOperation.close();
+            System.out.println("putOperation.close()");
+        }
+        if(BTConnection.executorService != null && !BTConnection.executorService.isShutdown()){
+            BTConnection.executorService.shutdown();
+            System.out.println("executorService.shutdown()");
+        }
+        
+        
+    }
 }
