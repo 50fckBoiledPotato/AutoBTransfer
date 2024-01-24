@@ -37,7 +37,7 @@ public class BTConnection
     private static String localDeviceName;
     private static boolean isBTavailable = false;
     private static Controller controller;
-    private static WatchKey key;
+    //private static WatchKey key;
     // kihelyeztem osztályváltozónak a key-t és csak egyszer lesz != null a checkForNewFiles()-nál
 
     public BTConnection(Controller controller) {
@@ -87,7 +87,7 @@ public class BTConnection
     private static void checkForNewFiles(WatchService watchService) {
         try {
             System.out.println("checkForNewFiles");
-            key = watchService.poll();
+            WatchKey key = watchService.poll();
             if (key != null && path != null) 
             {
                 for (WatchEvent<?> event : key.pollEvents()) 
@@ -111,6 +111,7 @@ public class BTConnection
                             
                             if(obexURL != null){
                                 connectAndSendFile( newFilePath.toFile(), obexURL);
+                                key.reset();
                             } else {
                                 controller.setErrorLblText("Bluetooth connection error.");
                                 System.out.println("obexURL is null ");
@@ -250,7 +251,7 @@ public class BTConnection
                 // Close streams and connection
                 fileInputStream.close();
                 outputStream.close();
-                key.reset();
+                
                 controller.setErrorLblText("File transfer completed.");
             }
             catch (IOException e) 
