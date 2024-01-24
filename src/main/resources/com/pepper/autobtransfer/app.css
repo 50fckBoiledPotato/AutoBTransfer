@@ -1,0 +1,22 @@
+.unavailable {
+    -fx-fill: linear-gradient(from 0.0% 0.0% to 100.0% 54.5024%, #000000 0.0%, #ffffff 100.0%);
+    
+}
+
+.available {
+   -fx-fill: linear-gradient(from 0.0% 0.0% to 100.0% 54.5024%, #000000 0.0%, #2b90ff 28.1879%, #ffffff 100.0%);
+}
+
+.error {
+    -fx-fill: linear-gradient(from 0.0% 0.0% to 100.0% 54.5024%, #000000 0.0%, #f82b3c 28.1879%, #f9fcff 100.0%);
+}
+
+
+Label {
+    -fx-text-fill: #000033;
+}
+
+#root {
+ 
+}
+

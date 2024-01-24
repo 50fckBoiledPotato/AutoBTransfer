@@ -21,6 +21,7 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         primaryStage = stage;
         scene = new Scene(loadFXML("primary"));
+        stage.setTitle("AutoBTransfer");
         stage.setScene(scene);
         stage.show();
     }
@@ -43,18 +44,17 @@ public class App extends Application {
     {
         super.stop();
         if(BTConnection.watchService != null){
-            BTConnection.watchService.close();
-            System.out.println("watchService.close()");
+            BTConnection.watchService.close();            
         }
         if (BTConnection.putOperation != null) {
-            BTConnection.putOperation.close();
-            System.out.println("putOperation.close()");
+            BTConnection.putOperation.close();            
         }
         if(BTConnection.executorService != null && !BTConnection.executorService.isShutdown()){
             BTConnection.executorService.shutdown();
-            System.out.println("executorService.shutdown()");
         }
-        
-        
+    }
+    
+    public static Stage getPrimaryStage() {
+        return primaryStage;
     }
 }

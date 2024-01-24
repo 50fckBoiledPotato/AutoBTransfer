@@ -3,6 +3,7 @@ package com.pepper.autobtransfer.bluetooth;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import com.intel.bluetooth.obex.OBEXClientSessionImpl;
+import com.pepper.autobtransfer.controller.Controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,6 +24,8 @@ import javax.obex.ResponseCodes;
 
 public class BTConnection 
 {
+    
+    
     static final UUID OBEX_PUSH_PROFILE = new UUID(0x1105);
     static String obexURL = null;
     public static WatchService watchService;
@@ -31,20 +34,31 @@ public class BTConnection
     private static final int BUFFER_SIZE = 1024;
     private static Path path;
     private static String deviceName;
+    private static String localDeviceName;
+    private static boolean isBTavailable = false;
+    private static Controller controller;
+    private static WatchKey key;
+    // kihelyeztem osztályváltozónak a key-t és csak egyszer lesz != null a checkForNewFiles()-nál
+
+    public BTConnection(Controller controller) {
+        this.controller = controller;
+    }    
+    
 
     public void watchFolder(Path path, String deviceName, int period){
         BTConnection.path = path;
         BTConnection.deviceName = deviceName;
-        try {
+        try 
+        {
             if(path != null && period != 0)
             {
                 watchService = FileSystems.getDefault().newWatchService();
+                
                 path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
                 System.out.println("path registered");
                 // Create a scheduled executor that will run a task every 5 seconds
                 executorService = Executors.newScheduledThreadPool(1);
                 executorService.scheduleAtFixedRate(() -> checkForNewFiles(watchService), 5, period, TimeUnit.SECONDS);
-              
             } 
                
         } catch (IOException   e) {
@@ -63,25 +77,27 @@ public class BTConnection
                     checkForNewFiles(watchService);
                 } else {
                     checkForNewFiles(watchService);
-                }
-                
+                }                
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
+    
     private static void checkForNewFiles(WatchService watchService) {
         try {
             System.out.println("checkForNewFiles");
-            WatchKey key = watchService.poll();
-            if (key != null && path != null) {
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+            key = watchService.poll();
+            if (key != null && path != null) 
+            {
+                for (WatchEvent<?> event : key.pollEvents()) 
+                {
+                    if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) 
+                    {
                         Path newFile = (Path) event.context();
                         // Process the new file as needed
-                        System.out.println("New file created: " + newFile);
-                        
+                        controller.setErrorLblText("New file found, sending...");
+                                                
                         Path newFilePath = (Path) event.context();
                         
                         newFilePath = Paths.get(path+"\\"+newFilePath.getFileName());
@@ -96,15 +112,18 @@ public class BTConnection
                             if(obexURL != null){
                                 connectAndSendFile( newFilePath.toFile(), obexURL);
                             } else {
+                                controller.setErrorLblText("Bluetooth connection error.");
                                 System.out.println("obexURL is null ");
                             }
                         } else {
-                            System.out.println("remoteDevice is null");
+                            controller.setErrorLblText("Device not found");
+                            System.out.println("remoteDevice not found");
                         }
                     }
                 }
-                key.reset();
+                
             } else {
+                controller.setErrorLblText("No changes in directory");
                 System.out.println("key == null OR path == null" + key + path);
             }
         } catch (IOException e) {
@@ -199,7 +218,6 @@ public class BTConnection
         // Open a connection and cast it to OBEXClientSession
         OBEXClientSessionImpl connection = (OBEXClientSessionImpl) Connector.open(serviceURL);
         System.out.println("Connection opened to: " + serviceURL);
-
         
         // Open output stream for sending file
         HeaderSet headerSet = connection.createHeaderSet();
@@ -232,8 +250,12 @@ public class BTConnection
                 // Close streams and connection
                 fileInputStream.close();
                 outputStream.close();
-                System.out.println("File transfer completed.");
-            } catch (IOException e) {
+                key.reset();
+                controller.setErrorLblText("File transfer completed.");
+            }
+            catch (IOException e) 
+            {
+                controller.setErrorLblText("Error during file transfer.");
                 System.out.println("Error during file transfer: " + e.getMessage());
                 System.out.println(file.getAbsolutePath() + " "+ file.length());
                 e.printStackTrace();
@@ -250,4 +272,30 @@ public class BTConnection
         System.out.println(ex.getStackTrace());
     }
 }
+    
+    public static boolean checkBluetoothAvailability() {
+        try {
+            LocalDevice localDevice = LocalDevice.getLocalDevice();            
+            System.out.println("Bluetooth is available on this device.");
+            System.out.println("Address: " + localDevice.getBluetoothAddress());
+            System.out.println("Name: " + localDevice.getFriendlyName());
+            BTConnection.localDeviceName = localDevice.getFriendlyName();
+            isBTavailable = true;
+        } catch (Exception e) {
+            System.out.println("Bluetooth is not available on this device.");
+            e.printStackTrace();
+            isBTavailable =  false;
+        }
+        return isBTavailable;
+    }
+    
+    public boolean isBluetoothAvailable()
+    {
+        return isBTavailable;
+    }
+
+    public String getLocalDeviceName() {
+        return localDeviceName;
+    }
+    
 }
